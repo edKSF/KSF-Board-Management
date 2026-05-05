@@ -1162,12 +1162,8 @@ export default function App() {
         </div>
         {/* Main */}
         <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
-          <div style={{background:C.white,borderBottom:`1px solid ${C.g200}`,padding:"11px 22px",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
+          <div style={{background:C.white,borderBottom:`1px solid ${C.g200}`,padding:"11px 22px",display:"flex",alignItems:"center",flexShrink:0}}>
             <div style={{fontFamily:"'Playfair Display'",color:C.navy,fontSize:18,fontWeight:600}}>{label}</div>
-            <div style={{display:"flex",gap:10,alignItems:"center"}}>
-              <div style={{background:C.g100,borderRadius:7,padding:"6px 12px",display:"flex",alignItems:"center",gap:6,fontSize:13,color:C.g400,fontFamily:"'DM Sans'"}}>🔍 Search…</div>
-              <div style={{position:"relative",cursor:"pointer"}}><span style={{fontSize:18}}>🔔</span><span style={{position:"absolute",top:-3,right:-4,width:14,height:14,borderRadius:"50%",background:C.red,color:"#fff",fontSize:8,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700}}>3</span></div>
-            </div>
           </div>
           <div style={{flex:1,overflowY:"auto",padding:22}}>{renderPage()}</div>
         </div>
