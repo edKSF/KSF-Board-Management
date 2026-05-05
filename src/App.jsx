@@ -330,7 +330,7 @@ function Meetings({ setNav }) {
   return (
     <div style={{display:"flex",gap:20,height:"100%"}}>
       <div style={{flex:"0 0 290px",display:"flex",flexDirection:"column",gap:10}}>
-        <SectionHeader title="Meetings" action={<Btn>+ New</Btn>}/>
+        <SectionHeader title="Meetings" action={null}/>
         <div style={{marginTop:4,display:"flex",flexDirection:"column",gap:10}}>
           {STATIC.meetings.map(x=>(
             <div key={x.id} onClick={()=>setSel(x.id)} style={{background:sel===x.id?C.navy:C.white,color:sel===x.id?"#fff":C.navy,borderRadius:12,padding:"13px 15px",cursor:"pointer",border:`1px solid ${sel===x.id?C.navy:C.g200}`,boxShadow:"0 2px 8px rgba(15,32,68,0.05)"}}>
@@ -499,7 +499,7 @@ function Documents({ store }) {
   const icons={Finance:"💰",Governance:"⚖️",Minutes:"📝",Reports:"📊"};
   return (
     <div style={{display:"flex",flexDirection:"column",gap:20}}>
-      <SectionHeader title="Document Center" action={<Btn>+ Upload</Btn>}/>
+      <SectionHeader title="Document Center" action={null}/>
       <div style={{display:"flex",gap:7,flexWrap:"wrap"}}>
         {cats.map(c=><button key={c} onClick={()=>setFilter(c)} style={{padding:"5px 14px",borderRadius:20,border:`1px solid ${filter===c?C.navy:C.g200}`,background:filter===c?C.navy:C.white,color:filter===c?"#fff":C.g600,fontFamily:"'DM Sans'",fontWeight:500,fontSize:12,cursor:"pointer"}}>{c}</button>)}
       </div>
@@ -518,8 +518,7 @@ function Documents({ store }) {
               <span style={{fontSize:11,color:C.g400,fontFamily:"'DM Sans'"}}>{doc.uploaded}</span>
             </div>
             <div style={{display:"flex",gap:7}}>
-              <button style={{flex:1,padding:"6px",background:C.navy,color:"#fff",border:"none",borderRadius:6,fontFamily:"'DM Sans'",fontSize:12,cursor:"pointer",fontWeight:500}}>View</button>
-              <button style={{flex:1,padding:"6px",background:C.g100,color:C.navy,border:"none",borderRadius:6,fontFamily:"'DM Sans'",fontSize:12,cursor:"pointer",fontWeight:500}}>Download</button>
+              <a href="#" style={{flex:1,padding:"6px",background:C.navy,color:"#fff",border:"none",borderRadius:6,fontFamily:"'DM Sans'",fontSize:12,cursor:"pointer",fontWeight:500,textAlign:"center",textDecoration:"none",display:"block"}}>View</a>
             </div>
           </Card>
         ))}
@@ -560,7 +559,7 @@ function Tasks({ store, update }) {
   );
   return (
     <div style={{display:"flex",flexDirection:"column",gap:20}}>
-      <SectionHeader title="Task Manager" action={<Btn>+ Add Task</Btn>}/>
+      <SectionHeader title="Task Manager" action={null}/>
       <div style={{display:"flex",gap:14,overflowX:"auto"}}>
         <Col title="Pending" items={by("pending")} color={C.gold}/>
         <Col title="In Progress" items={by("in-progress")} color={C.teal}/>
@@ -1023,7 +1022,7 @@ function Members() {
   const member = STATIC.members.find(m=>m.id===sel);
   return (
     <div style={{display:"flex",flexDirection:"column",gap:20}}>
-      <SectionHeader title="Board Members" action={<Btn>+ Invite</Btn>}/>
+      <SectionHeader title="Board Members" action={null}/>
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:14}}>
         {STATIC.members.map(m=>(
           <Card key={m.id} style={{display:"flex",flexDirection:"column",gap:12,alignItems:"center",textAlign:"center",padding:22,cursor:"pointer",border:`2px solid ${sel===m.id?C.teal:C.g200}`}} >
@@ -1035,7 +1034,7 @@ function Members() {
             </div>
             <div style={{fontSize:12,color:C.g400,fontFamily:"'DM Sans'"}}>{m.email}</div>
             <Btn variant="secondary" style={{width:"100%"}} onClick={()=>setSel(sel===m.id?null:m.id)}>
-              {sel===m.id?"Hide Bio":"View Bio"}
+              {sel===m.id?"Hide Bio ▲":"View Bio ▼"}
             </Btn>
             {sel===m.id&&m.bio&&(
               <div style={{textAlign:"left",background:C.g100,borderRadius:9,padding:"12px 14px",fontSize:12,color:C.g600,fontFamily:"'DM Sans'",lineHeight:1.6}}>
@@ -1053,7 +1052,7 @@ function Members() {
 function Discussions() {
   return (
     <div style={{display:"flex",flexDirection:"column",gap:20}}>
-      <SectionHeader title="Discussions" action={<Btn>+ New Thread</Btn>}/>
+      <SectionHeader title="Discussions" action={null}/>
       <Card style={{padding:0,overflow:"hidden"}}>
         {STATIC.discussions.map((d,i)=>(
           <div key={d.id} style={{display:"flex",gap:14,alignItems:"center",padding:"15px 19px",borderBottom:i<STATIC.discussions.length-1?`1px solid ${C.g200}`:"none",background:d.unread?"#F6FAFE":C.white,cursor:"pointer"}}>
