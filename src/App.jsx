@@ -69,9 +69,9 @@ const STATIC = {
     { id: 5, name: "Annual Report Draft.pdf", category: "Reports", size: "5.1 MB", uploaded: "Apr 30, 2026", uploader: "CEO Office" },
   ],
   members: [
-    { id: 1, name: "Alice Chen", role: "Board Chair", email: "alice@org.org", committee: "Executive", joined: "2022", avatar: "AC" },
-    { id: 2, name: "Robert Mills", role: "Treasurer", email: "robert@org.org", committee: "Finance", joined: "2021", avatar: "RM" },
-    { id: 3, name: "Sarah Park", role: "Secretary", email: "sarah@org.org", committee: "Governance", joined: "2023", avatar: "SP" },
+    { id: 1, name: "Alan Sutliff", role: "Board President", email: "alice@org.org", committee: "Executive", joined: "2022", avatar: "AC" },
+    { id: 2, name: "Allison Parker", role: "Treasurer", email: "robert@org.org", committee: "Finance", joined: "2021", avatar: "RM" },
+    { id: 3, name: "Connie Compton", role: "Secretary", email: "sarah@org.org", committee: "Governance", joined: "2023", avatar: "SP" },
     { id: 4, name: "James Wright", role: "Board Member", email: "james@org.org", committee: "Program", joined: "2020", avatar: "JW" },
     { id: 5, name: "Donna Torres", role: "Vice Chair", email: "donna@org.org", committee: "Finance", joined: "2022", avatar: "DT" },
     { id: 6, name: "Kevin Yates", role: "Board Member", email: "kevin@org.org", committee: "Governance", joined: "2024", avatar: "KY" },
@@ -84,7 +84,7 @@ const STATIC = {
   ],
 };
 
-const BOARD_PASSWORD = "Board2026!";
+const BOARD_PASSWORD = "KSF2026!";
 
 const NAV = [
   { id: "dashboard", label: "Dashboard", icon: "⊞" },
