@@ -87,11 +87,17 @@ const STATIC = {
       attendees: ["Alan Sutliff", "Allyson Johnson", "Randy Heath", "Connie Compton", "Marilyn Boxly", "Sharn Shoker"], agenda: [] },
   ],
   documents: [
-    { id: 1, name: "KSF Board Minutes – April 17, 2026.docx", category: "Minutes", size: "340 KB", uploaded: "Apr 17, 2026", uploader: "Alan Sutliff" },
-    { id: 2, name: "March 2026 Financial Report", category: "Finance", size: "1.2 MB", uploaded: "Apr 17, 2026", uploader: "Jenny Buron" },
-    { id: 3, name: "Emiko Craig Scholarship Recipients 2026", category: "Grants", size: "210 KB", uploaded: "Apr 10, 2026", uploader: "Connie Compton" },
-    { id: 4, name: "KW Grant Application – Updated", category: "Grants", size: "540 KB", uploaded: "Apr 17, 2026", uploader: "Connie Compton" },
-    { id: 5, name: "KSF Board Minutes – March 20, 2026.docx", category: "Minutes", size: "290 KB", uploaded: "Mar 20, 2026", uploader: "Alan Sutliff" },
+    { id: 1, name: "KSF Board Minutes – April 17, 2026", category: "Minutes", size: "340 KB", uploaded: "Apr 17, 2026", uploader: "Alan Sutliff", driveUrl: "https://drive.google.com/file/d/1NpsHr2mZMTU-bAceVqwVaBi1Yz20BQCN/view" },
+    { id: 2, name: "Statement of Financial Position – March 2026", category: "Finance", size: "136 KB", uploaded: "Apr 16, 2026", uploader: "Jenny Buron", driveUrl: "https://drive.google.com/file/d/1Zzkueif5aqumHQMwyyF-_V1O-zTuWYk3/view" },
+    { id: 3, name: "Statement of Financial Position – March 2026 (Detail)", category: "Finance", size: "156 KB", uploaded: "Apr 17, 2026", uploader: "Jenny Buron", driveUrl: "https://drive.google.com/file/d/1wZMn1QqC_tRhbhCuFRpfooHFYgJnJeR5/view" },
+    { id: 4, name: "Donor Restricted Funds Summary", category: "Finance", size: "319 KB", uploaded: "Apr 30, 2026", uploader: "Jenny Buron", driveUrl: "https://drive.google.com/file/d/1CNvDBcn6HmGDLMEXvzHU01B0IIZaRfdF/view" },
+    { id: 5, name: "Statement of Financial Position – February 2026", category: "Finance", size: "138 KB", uploaded: "Mar 24, 2026", uploader: "Jenny Buron", driveUrl: "https://drive.google.com/file/d/14yCCxYMdxPd0cth7qeUJnmijrq-lC7gh/view" },
+    { id: 6, name: "KSF Board Job Description", category: "Governance", size: "141 KB", uploaded: "Jan 16, 2026", uploader: "Alan Sutliff", driveUrl: "https://drive.google.com/file/d/1xW75atR83Gf1rfSPnYLhhEx_1Usef4MV/view" },
+    { id: 7, name: "Executive Director Job Description", category: "Governance", size: "124 KB", uploaded: "Jan 8, 2026", uploader: "Alan Sutliff", driveUrl: "https://drive.google.com/file/d/1aEcHkp7f9NCayJw1Pd9t1Ul55CiNKWxM/view" },
+    { id: 8, name: "Board Commitment Form (Blank)", category: "Governance", size: "167 KB", uploaded: "Nov 26, 2025", uploader: "Alan Sutliff", driveUrl: "https://drive.google.com/file/d/15_jZYZI5jX-_4L7l5QJ2fsZOvb3Tg64G/view" },
+    { id: 9, name: "Teacher Appreciation Email Draft", category: "Communications", size: "48 KB", uploaded: "Apr 25, 2026", uploader: "Marquise Dixon", driveUrl: "https://docs.google.com/document/d/1RMz53glGPmmDz5U9rdHc5GuVAXezMGnJUr8DbX4vYCw/edit" },
+    { id: 10, name: "Business Donation Levels", category: "Communications", size: "20 KB", uploaded: "Apr 19, 2026", uploader: "Sharn Shoker", driveUrl: "https://drive.google.com/file/d/1hCF3vUfAhOWvXZU0gRQqBWCLViOPCNjj/view" },
+    { id: 11, name: "Classroom Enrichment Grant Report – May 2026", category: "Grants", size: "679 KB", uploaded: "May 2, 2026", uploader: "Connie Compton", driveUrl: "https://drive.google.com/file/d/1xUcRu491irCqJiSzCXUd-PgUo5esWXVF/view" },
   ],
   members: [
     { id: 1, name: "Alan Sutliff", role: "President", email: "asutliff@me.com", committee: "Executive", joined: "2011", avatar: "AS",
@@ -496,31 +502,38 @@ function Documents({ store }) {
   const [filter,setFilter]=useState("All");
   const cats=["All",...new Set(STATIC.documents.map(d=>d.category))];
   const docs=filter==="All"?STATIC.documents:STATIC.documents.filter(d=>d.category===filter);
-  const icons={Finance:"💰",Governance:"⚖️",Minutes:"📝",Reports:"📊"};
+  const icons={Finance:"💰",Governance:"⚖️",Minutes:"📝",Grants:"🎓",Communications:"📢"};
+  const allDocs=[...docs,...store.savedMinutes.map(m=>({id:"m"+m.id,name:`AI Minutes – ${m.title}`,category:"Minutes",size:"—",uploaded:m.date,uploader:"AI Generated",driveUrl:null}))];
   return (
     <div style={{display:"flex",flexDirection:"column",gap:20}}>
-      <SectionHeader title="Document Center" action={null}/>
-      <div style={{display:"flex",gap:7,flexWrap:"wrap"}}>
-        {cats.map(c=><button key={c} onClick={()=>setFilter(c)} style={{padding:"5px 14px",borderRadius:20,border:`1px solid ${filter===c?C.navy:C.g200}`,background:filter===c?C.navy:C.white,color:filter===c?"#fff":C.g600,fontFamily:"'DM Sans'",fontWeight:500,fontSize:12,cursor:"pointer"}}>{c}</button>)}
+      <div>
+        <h2 style={{fontFamily:"'Playfair Display'",color:C.navy,fontSize:24,margin:"0 0 4px"}}>Document Center</h2>
+        <p style={{color:C.g600,fontFamily:"'DM Sans'",fontSize:13,margin:0}}>Click any document to open it directly in Google Drive.</p>
       </div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))",gap:13}}>
-        {[...docs,...(store.savedMinutes.map(m=>({id:"m"+m.id,name:`Minutes – ${m.title}`,category:"Minutes",size:"—",uploaded:m.date,uploader:"AI Generated"})))].map(doc=>(
-          <Card key={doc.id} style={{display:"flex",flexDirection:"column",gap:11,padding:16,cursor:"pointer"}}>
+      <div style={{display:"flex",gap:7,flexWrap:"wrap"}}>
+        {cats.map(c=><button key={c} onClick={()=>setFilter(c)} style={{padding:"6px 14px",borderRadius:20,border:`1px solid ${filter===c?"#006600":"rgba(0,102,0,0.2)"}`,background:filter===c?"#006600":C.white,color:filter===c?"#fff":C.g600,fontFamily:"'DM Sans'",fontWeight:500,fontSize:12,cursor:"pointer"}}>{c}</button>)}
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:13}}>
+        {allDocs.map(doc=>(
+          <a key={doc.id} href={doc.driveUrl||"#"} target={doc.driveUrl?"_blank":"_self"} rel="noopener noreferrer"
+            style={{textDecoration:"none",display:"flex",flexDirection:"column",gap:11,background:C.white,borderRadius:14,border:"1px solid rgba(0,102,0,0.15)",boxShadow:"0 2px 12px rgba(0,102,0,0.05)",padding:16,cursor:"pointer",transition:"all 0.15s"}}
+            onMouseEnter={e=>{e.currentTarget.style.boxShadow="0 4px 20px rgba(0,102,0,0.15)";e.currentTarget.style.borderColor="rgba(0,102,0,0.4)";e.currentTarget.style.transform="translateY(-1px)";}}
+            onMouseLeave={e=>{e.currentTarget.style.boxShadow="0 2px 12px rgba(0,102,0,0.05)";e.currentTarget.style.borderColor="rgba(0,102,0,0.15)";e.currentTarget.style.transform="translateY(0)";}}>
             <div style={{display:"flex",gap:11,alignItems:"flex-start"}}>
-              <div style={{fontSize:28}}>{icons[doc.category]||"📄"}</div>
+              <div style={{fontSize:26,flexShrink:0}}>{icons[doc.category]||"📄"}</div>
               <div style={{flex:1,minWidth:0}}>
                 <div style={{fontWeight:600,fontFamily:"'DM Sans'",color:C.navy,fontSize:13,lineHeight:1.3}}>{doc.name}</div>
-                <div style={{fontSize:11,color:C.g400,fontFamily:"'DM Sans'",marginTop:1}}>{doc.size}</div>
+                <div style={{fontSize:11,color:C.g400,fontFamily:"'DM Sans'",marginTop:2}}>{doc.uploader} · {doc.uploaded}</div>
               </div>
+              {doc.driveUrl&&<span style={{fontSize:16,flexShrink:0,color:"#006600",opacity:0.6}}>↗</span>}
             </div>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-              <Bdg label={doc.category}/>
-              <span style={{fontSize:11,color:C.g400,fontFamily:"'DM Sans'"}}>{doc.uploaded}</span>
+              <span style={{background:"#f0f7f0",color:"#006600",padding:"2px 9px",borderRadius:20,fontSize:11,fontWeight:600,fontFamily:"'DM Sans'"}}>{doc.category}</span>
+              <span style={{fontSize:11,color:doc.driveUrl?C.teal:C.g400,fontFamily:"'DM Sans'",fontWeight:doc.driveUrl?500:400}}>
+                {doc.driveUrl?"Open in Drive →":"Saved locally"}
+              </span>
             </div>
-            <div style={{display:"flex",gap:7}}>
-              <a href="#" style={{flex:1,padding:"6px",background:C.navy,color:"#fff",border:"none",borderRadius:6,fontFamily:"'DM Sans'",fontSize:12,cursor:"pointer",fontWeight:500,textAlign:"center",textDecoration:"none",display:"block"}}>View</a>
-            </div>
-          </Card>
+          </a>
         ))}
       </div>
     </div>
