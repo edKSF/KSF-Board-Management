@@ -762,6 +762,7 @@ function Slides({ store, update }) {
   const [ctx,setCtx]=useState("");
   const [result,setResult]=useState(null);
   const [loading,setLoading]=useState(false);
+  const [downloading,setDownloading]=useState(false);
   const [err,setErr]=useState("");
   const [step,setStep]=useState(1);
   const [viewSaved,setViewSaved]=useState(null);
@@ -782,20 +783,187 @@ function Slides({ store, update }) {
     setLoading(false);
   };
 
+  const downloadPptx=async(slides, title)=>{
+    setDownloading(true);
+    try{
+      // Load PptxGenJS from CDN if not already loaded
+      if(!window.PptxGenJS){
+        await new Promise((resolve,reject)=>{
+          const s=document.createElement("script");
+          s.src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js";
+          s.onload=resolve; s.onerror=reject;
+          document.head.appendChild(s);
+        });
+      }
+      const pres=new window.PptxGenJS();
+      pres.layout="LAYOUT_16x9";
+      pres.title=title;
+      pres.author="Kent Schools Foundation";
+
+      // KSF brand colors (no # prefix per pptxgenjs rules)
+      const KSF_GREEN="006600";
+      const KSF_DARK="003d00";
+      const KSF_GOLD="ffc200";
+      const KSF_WHITE="FFFFFF";
+      const KSF_LIGHT="f0f7f0";
+      const KSF_GRAY="475569";
+
+      slides.forEach((slide,i)=>{
+        const s=pres.addSlide();
+        const isDark=slide.type==="title"||slide.type==="closing"||slide.type==="agenda";
+
+        // Background
+        s.background={color: isDark ? KSF_DARK : KSF_WHITE};
+
+        // Left accent bar (KSF gold strip)
+        s.addShape(pres.shapes.RECTANGLE,{
+          x:0, y:0, w:0.18, h:5.625,
+          fill:{color: KSF_GOLD}, line:{color:KSF_GOLD}
+        });
+
+        // Slide number (bottom right)
+        s.addText(`${i+1} / ${slides.length}`,{
+          x:8.8, y:5.1, w:1, h:0.35,
+          fontSize:9, color: isDark?"FFFFFF88":KSF_GRAY,
+          fontFace:"Calibri", align:"right"
+        });
+
+        // KSF label bottom left
+        s.addText("Kent Schools Foundation",{
+          x:0.35, y:5.1, w:4, h:0.35,
+          fontSize:9, color: isDark?"FFFFFF66":KSF_GRAY,
+          fontFace:"Calibri", bold:false
+        });
+
+        if(slide.type==="title"){
+          // Large centered title slide
+          s.addText("Kent Schools Foundation",{
+            x:0.35, y:0.7, w:9.4, h:0.5,
+            fontSize:14, color:KSF_GOLD,
+            fontFace:"Calibri", bold:true, align:"left"
+          });
+          s.addText(slide.title,{
+            x:0.35, y:1.4, w:9.2, h:2.0,
+            fontSize:36, color:KSF_WHITE,
+            fontFace:"Georgia", bold:true, align:"left"
+          });
+          if(slide.subtitle){
+            s.addText(slide.subtitle,{
+              x:0.35, y:3.5, w:9.2, h:0.6,
+              fontSize:18, color:"FFFFFFCC",
+              fontFace:"Calibri", align:"left"
+            });
+          }
+          s.addText(new Date(mtg?.date||Date.now()).toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"}),{
+            x:0.35, y:4.3, w:5, h:0.4,
+            fontSize:12, color:KSF_GOLD,
+            fontFace:"Calibri", align:"left"
+          });
+        } else if(slide.type==="agenda"){
+          // Agenda slide - green bg, gold title, white bullets
+          s.addText("Agenda",{
+            x:0.35, y:0.3, w:9.2, h:0.7,
+            fontSize:28, color:KSF_GOLD,
+            fontFace:"Georgia", bold:true
+          });
+          s.addShape(pres.shapes.RECTANGLE,{
+            x:0.35, y:1.1, w:9.2, h:0.03,
+            fill:{color:KSF_GOLD}, line:{color:KSF_GOLD}
+          });
+          const bullets=slide.bullets.map((b,bi)=>({
+            text:`${bi+1}.  ${b}`,
+            options:{breakLine:true, fontSize:15, color:KSF_WHITE, fontFace:"Calibri", paraSpaceAfter:8}
+          }));
+          s.addText(bullets,{x:0.35, y:1.3, w:9.2, h:3.8});
+        } else if(slide.type==="closing"){
+          s.addText(slide.title,{
+            x:0.35, y:1.5, w:9.2, h:1.5,
+            fontSize:34, color:KSF_WHITE,
+            fontFace:"Georgia", bold:true, align:"center"
+          });
+          if(slide.subtitle){
+            s.addText(slide.subtitle,{
+              x:0.35, y:3.1, w:9.2, h:0.6,
+              fontSize:16, color:"FFFFFFCC",
+              fontFace:"Calibri", align:"center"
+            });
+          }
+          s.addText("kentschoolsfoundation.org",{
+            x:0.35, y:4.0, w:9.2, h:0.4,
+            fontSize:13, color:KSF_GOLD,
+            fontFace:"Calibri", align:"center", bold:true
+          });
+        } else {
+          // Standard content slide
+          // Title bar (green)
+          s.addShape(pres.shapes.RECTANGLE,{
+            x:0.18, y:0, w:9.82, h:1.1,
+            fill:{color:KSF_GREEN}, line:{color:KSF_GREEN}
+          });
+          s.addText(slide.title,{
+            x:0.35, y:0.1, w:9.3, h:0.9,
+            fontSize:22, color:KSF_WHITE,
+            fontFace:"Georgia", bold:true, valign:"middle"
+          });
+          // Subtitle if present
+          let contentY=1.25;
+          if(slide.subtitle){
+            s.addText(slide.subtitle,{
+              x:0.35, y:1.15, w:9.2, h:0.35,
+              fontSize:13, color:KSF_GREEN,
+              fontFace:"Calibri", bold:true, italic:true
+            });
+            contentY=1.6;
+          }
+          // Bullet points
+          const bullets=slide.bullets.map((b,bi)=>({
+            text:b,
+            options:{
+              bullet:{color:KSF_GREEN},
+              breakLine:bi<slide.bullets.length-1,
+              fontSize:14, color:"1a1a1a",
+              fontFace:"Calibri", paraSpaceAfter:6
+            }
+          }));
+          s.addText(bullets,{x:0.4, y:contentY, w:9.1, h:5.625-contentY-0.8});
+          // Speaker notes footer
+          s.addShape(pres.shapes.RECTANGLE,{
+            x:0.18, y:4.9, w:9.82, h:0.03,
+            fill:{color:KSF_LIGHT}, line:{color:KSF_LIGHT}
+          });
+        }
+        // Add speaker notes
+        if(slide.notes){ s.addNotes(slide.notes); }
+      });
+
+      const filename=`KSF_${(title||"Presentation").replace(/[^a-zA-Z0-9]/g,"_")}_${new Date().toISOString().slice(0,10)}.pptx`;
+      await pres.writeFile({fileName:filename});
+    }catch(e){
+      console.error(e);
+      alert("Download failed. Please try again.");
+    }
+    setDownloading(false);
+  };
+
   const save=()=>{
     const entry={id:Date.now(),title:mtg?.title||"Meeting",date:new Date().toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}),slides:result};
     update({savedSlides:[...store.savedSlides,entry]});
     alert("Slide outline saved!");
   };
 
-  const typeColors={title:[C.navy,"#fff"],agenda:[C.teal,"#fff"],content:[C.white,C.navy],data:["#FFF3DC",C.navy],closing:[C.navyL,"#fff"]};
+  const typeColors={title:[C.navy,"#fff"],agenda:["#003d00","#fff"],content:[C.white,C.navy],data:["#f0f7f0",C.navy],closing:["#003d00","#fff"]};
   const typeIcons={title:"🏛️",agenda:"📋",content:"📄",data:"📊",closing:"✅"};
 
   if(viewSaved) return (
     <div style={{display:"flex",flexDirection:"column",gap:20}}>
-      <div style={{display:"flex",gap:10,alignItems:"center"}}>
-        <Btn variant="secondary" onClick={()=>setViewSaved(null)}>← Back</Btn>
-        <h2 style={{fontFamily:"'Playfair Display'",color:C.navy,fontSize:22,margin:0}}>{viewSaved.title} — Slides</h2>
+      <div style={{display:"flex",gap:10,alignItems:"center",justifyContent:"space-between"}}>
+        <div style={{display:"flex",gap:10,alignItems:"center"}}>
+          <Btn variant="secondary" onClick={()=>setViewSaved(null)}>← Back</Btn>
+          <h2 style={{fontFamily:"'Playfair Display'",color:C.navy,fontSize:22,margin:0}}>{viewSaved.title}</h2>
+        </div>
+        <Btn onClick={()=>downloadPptx(viewSaved.slides, viewSaved.title)} style={{background:"#006600",display:"flex",alignItems:"center",gap:6}}>
+          {downloading?"⏳ Downloading…":"⬇️ Download .pptx"}
+        </Btn>
       </div>
       <div style={{display:"flex",flexDirection:"column",gap:14}}>
         {viewSaved.slides.map((slide,i)=>{
@@ -823,17 +991,21 @@ function Slides({ store, update }) {
 
   return (
     <div style={{display:"flex",flexDirection:"column",gap:22}}>
-      <div><h2 style={{fontFamily:"'Playfair Display'",color:C.navy,fontSize:26,margin:"0 0 4px"}}>🎨 Slide Outlines</h2><p style={{color:C.g400,fontFamily:"'DM Sans'",fontSize:14,margin:0}}>Generate a slide-by-slide presentation outline from any meeting agenda. Paste into PowerPoint or Google Slides.</p></div>
+      <div>
+        <h2 style={{fontFamily:"'Playfair Display'",color:C.navy,fontSize:26,margin:"0 0 4px"}}>🎨 Slide Outlines</h2>
+        <p style={{color:C.g400,fontFamily:"'DM Sans'",fontSize:14,margin:0}}>Generate a full presentation from any meeting agenda — then download as a real <strong>.pptx</strong> file with KSF branding.</p>
+      </div>
 
       {store.savedSlides.length>0&&(
         <Card>
-          <h3 style={{fontFamily:"'Playfair Display'",color:C.navy,fontSize:16,margin:"0 0 12px"}}>Saved Outlines</h3>
+          <h3 style={{fontFamily:"'Playfair Display'",color:C.navy,fontSize:16,margin:"0 0 12px"}}>Saved Presentations</h3>
           <div style={{display:"flex",flexDirection:"column",gap:8}}>
             {store.savedSlides.map(s=>(
               <div key={s.id} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 14px",background:C.g100,borderRadius:9}}>
                 <span style={{fontSize:20}}>🎨</span>
                 <div style={{flex:1}}><div style={{fontWeight:600,fontFamily:"'DM Sans'",color:C.navy,fontSize:13}}>{s.title}</div><div style={{fontSize:11,color:C.g400,fontFamily:"'DM Sans'"}}>{s.slides.length} slides · {s.date}</div></div>
-                <Btn onClick={()=>setViewSaved(s)} style={{fontSize:12,padding:"6px 12px"}}>View</Btn>
+                <Btn variant="secondary" onClick={()=>setViewSaved(s)} style={{fontSize:12,padding:"6px 12px"}}>View</Btn>
+                <Btn onClick={()=>downloadPptx(s.slides,s.title)} style={{fontSize:12,padding:"6px 12px",background:"#006600"}}>{downloading?"⏳":"⬇️ .pptx"}</Btn>
               </div>
             ))}
           </div>
@@ -841,7 +1013,7 @@ function Slides({ store, update }) {
       )}
 
       <div style={{display:"flex",alignItems:"center",gap:0,marginBottom:0}}>
-        {["Select Meeting","Add Context","View Slides"].map((s,i)=>(
+        {["Select Meeting","Add Context","Download Slides"].map((s,i)=>(
           <div key={s} style={{display:"flex",alignItems:"center"}}>
             <div style={{display:"flex",alignItems:"center",gap:7}}>
               <div style={{width:25,height:25,borderRadius:"50%",background:step>i+1?C.green:step===i+1?C.teal:C.g200,color:step>=i+1?"#fff":C.g400,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,fontFamily:"'DM Sans'"}}>{step>i+1?"✓":i+1}</div>
@@ -857,8 +1029,8 @@ function Slides({ store, update }) {
           <h3 style={{fontFamily:"'Playfair Display'",color:C.navy,fontSize:16,margin:"0 0 12px"}}>Select a Meeting</h3>
           <div style={{display:"flex",flexDirection:"column",gap:9}}>
             {STATIC.meetings.map(m=>(
-              <div key={m.id} onClick={()=>setSid(m.id)} style={{display:"flex",gap:12,alignItems:"center",padding:"12px 14px",borderRadius:9,border:`2px solid ${sid===m.id?C.teal:C.g200}`,background:sid===m.id?"#F0FFFE":C.white,cursor:"pointer"}}>
-                <div style={{width:15,height:15,borderRadius:"50%",border:`2px solid ${sid===m.id?C.teal:C.g200}`,background:sid===m.id?C.teal:"transparent",flexShrink:0}}/>
+              <div key={m.id} onClick={()=>setSid(m.id)} style={{display:"flex",gap:12,alignItems:"center",padding:"12px 14px",borderRadius:9,border:`2px solid ${sid===m.id?"#006600":C.g200}`,background:sid===m.id?"#f0f7f0":C.white,cursor:"pointer"}}>
+                <div style={{width:15,height:15,borderRadius:"50%",border:`2px solid ${sid===m.id?"#006600":C.g200}`,background:sid===m.id?"#006600":"transparent",flexShrink:0}}/>
                 <div style={{flex:1}}><div style={{fontWeight:600,fontFamily:"'DM Sans'",color:C.navy,fontSize:13}}>{m.title}</div><div style={{fontSize:11,color:C.g400,fontFamily:"'DM Sans'"}}>{m.agenda.length} agenda items · {m.attendees.length} attendees</div></div>
                 <Bdg label={m.status}/>
               </div>
@@ -872,7 +1044,7 @@ function Slides({ store, update }) {
         <div style={{display:"flex",flexDirection:"column",gap:13}}>
           <Card>
             <h3 style={{fontFamily:"'Playfair Display'",color:C.navy,fontSize:16,margin:"0 0 4px"}}>{mtg.title}</h3>
-            <p style={{color:C.g400,fontFamily:"'DM Sans'",fontSize:13,margin:"0 0 13px"}}>{mtg.agenda.length} agenda items → {mtg.agenda.length+3} estimated slides</p>
+            <p style={{color:C.g400,fontFamily:"'DM Sans'",fontSize:13,margin:"0 0 13px"}}>{mtg.agenda.length} agenda items → estimated {mtg.agenda.length+3} slides</p>
             <div style={{display:"flex",flexWrap:"wrap",gap:7,marginBottom:14}}>
               {mtg.agenda.map((a,i)=>(
                 <div key={a.id} style={{background:C.g100,borderRadius:8,padding:"5px 10px",display:"flex",gap:6,alignItems:"center"}}>
@@ -882,25 +1054,34 @@ function Slides({ store, update }) {
               ))}
             </div>
             <h4 style={{fontFamily:"'DM Sans'",color:C.navy,fontSize:13,fontWeight:600,margin:"0 0 7px"}}>Additional Context <span style={{color:C.g400,fontWeight:400}}>(optional)</span></h4>
-            <textarea value={ctx} onChange={e=>setCtx(e.target.value)} rows={4} placeholder="e.g. Audience is the full board. Tone should be formal. Key highlight is the $2M surplus in Q1. CEO will present strategic growth slide." style={{width:"100%",border:`1px solid ${C.g200}`,borderRadius:8,padding:"10px 12px",fontFamily:"'DM Sans'",fontSize:13,resize:"vertical",outline:"none",lineHeight:1.6}}/>
+            <textarea value={ctx} onChange={e=>setCtx(e.target.value)} rows={4} placeholder="e.g. Key highlight is the Q1 surplus. CEO will present strategic growth slide. Formal tone for full board." style={{width:"100%",border:`1px solid ${C.g200}`,borderRadius:8,padding:"10px 12px",fontFamily:"'DM Sans'",fontSize:13,resize:"vertical",outline:"none",lineHeight:1.6}}/>
           </Card>
           <div style={{display:"flex",gap:8,alignItems:"center"}}>
             <Btn variant="secondary" onClick={()=>setStep(1)}>← Back</Btn>
-            <Btn onClick={generate}>{loading?"Generating…":"🎨 Generate Slide Outline"}</Btn>
+            <Btn onClick={generate}>{loading?"Generating…":"🎨 Generate Slides"}</Btn>
             {err&&<span style={{color:C.red,fontFamily:"'DM Sans'",fontSize:13}}>{err}</span>}
           </div>
-          {loading&&<Card style={{textAlign:"center",padding:36}}><div style={{fontSize:38,marginBottom:12}}>🎨</div><div style={{fontFamily:"'Playfair Display'",color:C.navy,fontSize:18,marginBottom:6}}>Building Slide Outline…</div><div style={{color:C.g400,fontFamily:"'DM Sans'",fontSize:13}}>AI is structuring your presentation from the meeting agenda.</div></Card>}
+          {loading&&<Card style={{textAlign:"center",padding:36}}><div style={{fontSize:38,marginBottom:12}}>🎨</div><div style={{fontFamily:"'Playfair Display'",color:C.navy,fontSize:18,marginBottom:6}}>Building Slides…</div><div style={{color:C.g400,fontFamily:"'DM Sans'",fontSize:13}}>AI is structuring your KSF presentation.</div></Card>}
         </div>
       )}
 
       {step===3&&result&&(
         <div style={{display:"flex",flexDirection:"column",gap:14}}>
-          <Card style={{borderLeft:`4px solid ${C.green}`,padding:"16px 20px"}}>
+          <Card style={{borderLeft:"4px solid #006600",padding:"16px 20px"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-              <div style={{display:"flex",alignItems:"center",gap:9}}><span style={{fontSize:20}}>✅</span><h3 style={{fontFamily:"'Playfair Display'",color:C.navy,fontSize:17,margin:0}}>{result.length} Slides Generated</h3></div>
+              <div style={{display:"flex",alignItems:"center",gap:9}}>
+                <span style={{fontSize:20}}>✅</span>
+                <div>
+                  <h3 style={{fontFamily:"'Playfair Display'",color:C.navy,fontSize:17,margin:"0 0 2px"}}>{result.length} Slides Ready</h3>
+                  <p style={{fontFamily:"'DM Sans'",color:C.g400,fontSize:12,margin:0}}>KSF branded · speaker notes included · opens in PowerPoint or Google Slides</p>
+                </div>
+              </div>
               <div style={{display:"flex",gap:8}}>
                 <Btn variant="secondary" onClick={()=>{setStep(2);setResult(null);}}>Regenerate</Btn>
-                <Btn variant="navy" onClick={save}>💾 Save Outline</Btn>
+                <Btn variant="navy" onClick={save}>💾 Save</Btn>
+                <Btn onClick={()=>downloadPptx(result,mtg?.title||"KSF Presentation")} style={{background:"#006600",fontSize:14,padding:"8px 20px"}}>
+                  {downloading?"⏳ Downloading…":"⬇️ Download .pptx"}
+                </Btn>
               </div>
             </div>
           </Card>
@@ -926,14 +1107,14 @@ function Slides({ store, update }) {
             })}
           </div>
           <div style={{display:"flex",gap:8}}>
-            <Btn onClick={()=>{setStep(1);setSid(null);setCtx("");setResult(null);}}>New Outline</Btn>
-            <Btn variant="outline" onClick={()=>navigator.clipboard?.writeText(result.map((s,i)=>`SLIDE ${i+1}: ${s.title}\n${s.subtitle?s.subtitle+"\n":""}\nBullets:\n${s.bullets.map(b=>"• "+b).join("\n")}\n\nSpeaker Notes: ${s.notes}`).join("\n\n---\n\n"))}>📋 Copy All</Btn>
+            <Btn onClick={()=>{setStep(1);setSid(null);setCtx("");setResult(null);}}>New Presentation</Btn>
           </div>
         </div>
       )}
     </div>
   );
 }
+
 
 // ─── Governance ───────────────────────────────────────────────────────────────
 function Governance() {
